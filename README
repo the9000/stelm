@@ -1,0 +1,5 @@
+STELM stands for Simple TExtile-Like Markup library.
+
+It tries to be similar to Textile which syntax everyone is used to, with occasional forays to wiki-style or Markdown syntax when it is more convenient.
+
+Compared to these, it tries to be lighter weight and have less features.
