@@ -81,11 +81,14 @@ def applyQueue(s):
   return ret
 
 
-from marker_based import Striker, Boldfacer, Italicizer
-from escaper import Escaper
+from linebreaker import LineBreaker
 from preformatter import PreFormatter
 from linker import Linker
+from dasher import Dasher
+from marker_based import Striker, Boldfacer, Italicizer
+from escaper import Escaper
+
 #from hashtagger import HashTagger
 
-QUEUE = (PreFormatter, Linker, Boldfacer, Italicizer, Striker, Escaper) 
+QUEUE = (LineBreaker, PreFormatter, Linker, Dasher, Boldfacer, Italicizer, Striker, Escaper)
 

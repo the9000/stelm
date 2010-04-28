@@ -69,7 +69,7 @@ class MarkerBased(object):
       while look_for_closing:
         look_for_closing = False # usually we need only 1 iteration
         hit = self.END_RE.search(s, left_limit)
-        if hit:
+        if hit and hit.start() != self.end:
           mark = hit.groups()[0]
           if mark == u'\\':
             # escape; ignore and continue

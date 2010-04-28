@@ -30,6 +30,8 @@ import unittest
 from marker_based import Boldfacer, Italicizer, Striker
 from preformatter import PreFormatter
 from linker import Linker
+from linebreaker import LineBreaker
+from dasher import Dasher
 import combinator
 
 class Test(unittest.TestCase):
@@ -175,6 +177,56 @@ class Test(unittest.TestCase):
     frags = combinator.applyQueue(s)
     self.assertEqual(u"".join(frags), u'abc <a href="http://d.e.f">D <i>E</i> F</a> ghi')
 
+  def testLBreakerN(self):
+    s = u'a\nb'
+    f = LineBreaker(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertTrue(u"".join(frags).startswith(u'a<br/>'))
+    self.assertEqual(next, s.index("b"))
+
+  def testLBreakerR(self):
+    s = u'a\rb'
+    f = LineBreaker(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertTrue(u"".join(frags).startswith(u'a<br/>'))
+    self.assertEqual(next, s.index("b"))
+
+  def testLBreakerNR(self):
+    s = u'a\n\rb'
+    f = LineBreaker(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertTrue(u"".join(frags).startswith(u'a<br/>'))
+    self.assertEqual(next, s.index("b"))
+
+  def testLBreakerRN(self):
+    s = u'a\r\nb'
+    f = LineBreaker(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertTrue(u"".join(frags).startswith(u'a<br/>'))
+    self.assertEqual(next, s.index("b"))
+
+
+  def testDasher(self):
+    s = u'a -- b'
+    f = Dasher(s, 0)
+    frags, next = f.apply(s, 0)
+    print frags # XXX
+    self.assertTrue(u"".join(frags).startswith(u'a \u2014'))
+    self.assertEqual(next, s.index(" b"))
+
+  def testDasherBOL(self):
+    s = u'-- b'
+    f = Dasher(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertTrue(u"".join(frags).startswith(u'\u2014'))
+    self.assertEqual(next, s.index(" b"))
+
+  def testDasherBOL2(self):
+    s = u'Whatnot\n-- b'
+    f = Dasher(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertTrue(u"".join(frags).startswith(u'Whatnot\n\u2014'))
+    self.assertEqual(next, s.index(" b"))
 
 if __name__ == "__main__":
   unittest.main()
