@@ -1,0 +1,9 @@
+* Add length limiter to format() that keeps all tags closed, etc.
+
+* Add user settings to formatters.
+
+* Add #hashtags formatter.
+* Add markdown-like list formatter.
+
+* Use class inheritance to remove code redundancy.
+* Make apply() parameterless.
