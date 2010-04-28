@@ -1,0 +1,183 @@
+# encoding: utf-8
+
+# Copyright 2010 by Dmitry Cheryasov. All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without modification, are
+# permitted provided that the following conditions are met:
+# 
+#    1. Redistributions of source code must retain the above copyright notice, this list of
+#       conditions and the following disclaimer.
+# 
+#    2. Redistributions in binary form must reproduce the above copyright notice, this list
+#       of conditions and the following disclaimer in the documentation and/or other materials
+#       provided with the distribution.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDER BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# ^^^ This is the "Simplified BSD License"
+
+import unittest
+
+from marker_based import Boldfacer, Italicizer, Striker
+from preformatter import PreFormatter
+from linker import Linker
+import combinator
+
+class Test(unittest.TestCase):
+
+  def testBold(self):
+    s = u"abc *def* ghi"
+    f = Boldfacer(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertTrue(u"".join(frags).startswith(u"abc <b>def</b>"))
+    self.assertEqual(next, s.index(" g"))
+
+  def testBoldEndingNonWord(self):
+    # Serves for all marker-based formatters
+    s = u"abc *2*2=4*. yeah"
+    f = Boldfacer(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertTrue(u"".join(frags).startswith(u"abc <b>2*2=4</b>"))
+    self.assertEqual(next, s.index("."))
+
+  def testBoldEndingEOL(self):
+    # Serves for all marker-based formatters
+    s = u"abc *2*2=4*"
+    f = Boldfacer(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertTrue(u"".join(frags).startswith(u"abc <b>2*2=4</b>"))
+    self.assertEqual(next, len(s))
+
+  def testItalic(self):
+    s = u"abc _def_ ghi"
+    f = Italicizer(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertTrue(u"".join(frags).startswith(u"abc <i>def</i>"))
+    self.assertEqual(next, s.index(" g"))
+
+  def testStrikeout(self):
+    s = u"abc -def- ghi"
+    f = Striker(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertTrue(u"".join(frags).startswith(u"abc <s>def</s>"))
+    self.assertEqual(next, s.index(" g"))
+
+  def testMarkedEscapeInside(self):
+    s = ur"a *bc\*def* ghi"
+    f = Boldfacer(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertTrue(u"".join(frags).startswith(u"a <b>bc*def</b>"))
+    self.assertEqual(next, s.index(" g"))
+
+  def testCombinatorSimple(self):
+    s = u"abc *def* _ghi_ -jkl- mno"
+    frags = combinator.applyQueue(s)
+    self.assertEqual(u"".join(frags), u"abc <b>def</b> <i>ghi</i> <s>jkl</s> mno")
+
+  def testCombinatorNested(self):
+    s = u"abc _*def*_ _-ghi-_ jkl"
+    frags = combinator.applyQueue(s)
+    self.assertEqual(u"".join(frags), u"abc <i><b>def</b></i> <i><s>ghi</s></i> jkl")
+
+  def testEscapeCombinedBegin(self):
+    s = ur"a\*bc *def* ghi"
+    frags = combinator.applyQueue(s)
+    self.assertEqual(u"".join(frags), u"a*bc <b>def</b> ghi")
+
+  def testMarkedEscapeCombinedInside(self):
+    s = ur"a *b _c\*d_ ef* ghi"
+    frags = combinator.applyQueue(s)
+    self.assertEqual(u"".join(frags), u"a <b>b <i>c*d</i> ef</b> ghi")
+
+  def testLiteralBackslash(self):
+    s = ur"a\\b"
+    frags = combinator.applyQueue(s)
+    self.assertEqual(u"".join(frags), ur"a\b")
+
+  def testLiteralBackslashThenEscapeBegin(self):
+    s = ur"a\\\*b"
+    frags = combinator.applyQueue(s)
+    self.assertEqual(u"".join(frags), ur"a\*b")
+
+  def testLiteralBackslashThenEscapeInside(self):
+    s = ur"*a\\\\\*b*"
+    frags = combinator.applyQueue(s)
+    self.assertEqual(u"".join(frags), ur"<b>a\\*b</b>")
+
+  def testPreformat(self):
+    s = ur"abc %!%def ghi%!%jkl"
+    f = PreFormatter(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertTrue(u"".join(frags).startswith(u"abc <pre>def ghi</pre>"))
+    self.assertEqual(next, s.index("jkl"))
+
+  def testPreformatEscapeInside(self):
+    s = ur"abc %!% end with \%!% and you're done %!% aaa"
+    f = PreFormatter(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertTrue(u"".join(frags).startswith(u"abc <pre> end with \\%!% and you're done </pre>"))
+    self.assertEqual(next, s.index(" aaa"))
+
+  def testPreformatContainingMarkup(self):
+    s = ur"code %!%*char*%!% done"
+    frags = combinator.applyQueue(s)
+    self.assertEqual(u"".join(frags), ur"code <pre>*char*</pre> done")
+
+  def testPreformatWrappedInMarkup(self):
+    s = ur"remember: *%!%i += 1%!%* and only so!"
+    frags = combinator.applyQueue(s)
+    self.assertEqual(u"".join(frags), ur"remember: <b><pre>i += 1</pre></b> and only so!")
+
+  def testLinkerSimple(self):
+    s = ur"abc http://d.e.f ghi"
+    f = Linker(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertTrue(u"".join(frags).startswith(u'abc <a href="http://d.e.f">http://d.e.f</a>'))
+    self.assertEqual(next, s.index(" ghi"))
+
+  def testLinkerNamed(self):
+    s = ur"abc http://d.e.f|DEF ghi"
+    f = Linker(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertTrue(u"".join(frags).startswith(u'abc <a href="http://d.e.f">DEF</a>'))
+    self.assertEqual(next, s.index(" ghi"))
+
+  def testLinkerNamedSpaced(self):
+    s = ur'abc http://d.e.f|"D EF" ghi'
+    f = Linker(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertTrue(u"".join(frags).startswith(u'abc <a href="http://d.e.f">D EF</a>'))
+    self.assertEqual(next, s.index(" ghi"))
+
+  def testLinkerNamedEscaped(self):
+    s = ur'abc http://d.e.f|"D\"E\"F" ghi'
+    f = Linker(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertTrue(u"".join(frags).startswith(u'abc <a href="http://d.e.f">D"E"F</a>'))
+    self.assertEqual(next, s.index(" ghi"))
+
+  def testLinkerWrappedInMarkup(self):
+    s = ur'abc *http://d.e.f|"DEF"* ghi'
+    frags = combinator.applyQueue(s)
+    self.assertEqual(u"".join(frags), u'abc <b><a href="http://d.e.f">DEF</a></b> ghi')
+
+  def testLinkerNameWithInMarkup(self):
+    s = ur'abc http://d.e.f|"D _E_ F" ghi'
+    frags = combinator.applyQueue(s)
+    self.assertEqual(u"".join(frags), u'abc <a href="http://d.e.f">D <i>E</i> F</a> ghi')
+
+
+if __name__ == "__main__":
+  unittest.main()
+
+
+
