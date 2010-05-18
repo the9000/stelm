@@ -104,10 +104,10 @@ def produce(base_class, marker, tag):
   open_tag, close_tag = "<%s>" % tag, "</%s>" % tag
 
   # match only our opening mark
-  START_RE = re.compile(ur"(\%s(?=\S))" % marker)
+  START_RE = re.compile(ur"(\%s(?=\S))" % marker, re.U)
 
   # match either escape or closing mark + end of word
-  END_RE = re.compile(ur"((?:\\)|(?:(?<=\S)\%s(?=\W|$)))" % marker)
+  END_RE = re.compile(ur"((?:\\)|(?:(?<=\S)\%s(?=\W|$)))" % marker, re.U)
 
   class MarkerWrapper(base_class):
     def __str__(self):

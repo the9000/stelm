@@ -41,7 +41,7 @@ class HashTagger(object):
   #dot.com -> dot.com
   """
 
-  TAG_RE = re.compile(u"#(\w+(?:[\\.]\w+)*)")
+  TAG_RE = re.compile(u"#(\w+(?:[\\.]\w+)*)", re.U)
   TAG_URL = u"/tag/"
 
   def __init__(self, s, pos):

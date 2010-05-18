@@ -52,7 +52,7 @@ class Linker(object):
   Current limitation: a literal vertical bar cannot be inserted into the URL. Use %7C instead.
   """
 
-  LINK_RE = re.compile("(http://\S+?)(\s|\|)")
+  LINK_RE = re.compile("(http://\S+?)(\s|\||$)")
   SPACE_RE = re.compile("\s")
 
   def __init__(self, s, pos):
