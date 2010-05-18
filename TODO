@@ -4,6 +4,7 @@
 
 * Add #hashtags formatter.
 * Add markdown-like list formatter.
+* Switch code formatter to double backticks, add one-liners.
 
 * Use class inheritance to remove code redundancy.
 * Make apply() parameterless.
