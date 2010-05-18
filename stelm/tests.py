@@ -243,6 +243,27 @@ class LinkerTests(unittest.TestCase):
     self.assertEqual(u"".join(frags), u'abc (<a href="http://d.e.f">http://d.e.f</a>')
     self.assertEqual(next, s.index(") ghi"))
 
+  def testComma(self):
+    s = ur"abc http://d.e.f, ghi"
+    f = Linker(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertEqual(u"".join(frags), u'abc <a href="http://d.e.f">http://d.e.f</a>')
+    self.assertEqual(next, s.index(", ghi"))
+
+  def testOuterParensAndDot(self):
+    s = ur"abc (http://d.e.f). ghi"
+    f = Linker(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertEqual(u"".join(frags), u'abc (<a href="http://d.e.f">http://d.e.f</a>')
+    self.assertEqual(next, s.index("). ghi"))
+
+  def testPunctuationAndName(self):
+    s = ur"abc http://d.e.f?ghi!|foo. ghi"
+    f = Linker(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertEqual(u"".join(frags), u'abc (<a href="http://d.e.f?ghi!">foo</a>')
+    self.assertEqual(next, s.index(". ghi"))
+
   def testInnerParens(self):
     s = ur"abc http://wiki/Foo_(Bar) ghi"
     f = Linker(s, 0)

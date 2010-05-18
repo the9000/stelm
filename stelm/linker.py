@@ -74,10 +74,17 @@ class Linker(object):
       if pos != start:
         res_list.append(s[pos:start])
       url = s[self.start : self.end]
-      if url.endswith(")") and not "(" in url:
-        # last ")" is not a part of URL unless there's an "(" earlier in it
-        self.end -= 1
-        url = s[self.start : self.end]
+      if not self.has_text:
+        # strip pieces that may not belong to URL
+        while True:
+          last_of_url = url[-1]
+          if last_of_url == ")" and "(" not in url or last_of_url in ".,;:?!\"'":
+            # last ")" is not a part of URL unless there's an "(" earlier in it;
+            # common punctuation is usually not a part of URL
+            self.end -= 1
+            url = s[self.start : self.end]
+          else:
+            break
       if self.has_text:
         after_end = self.end+1 # including the space
         # cut out the link text
