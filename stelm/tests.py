@@ -59,6 +59,30 @@ class MarkerBasedTests(unittest.TestCase):
     self.assertTrue(u"".join(frags).startswith(u"abc <b>2*2=4</b>"))
     self.assertEqual(next, len(s))
 
+  def testBoldBOL(self):
+    # Serves for all marker-based formatters
+    s = u"*2*2=4* abc"
+    f = Boldfacer(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertTrue(u"".join(frags).startswith(u"<b>2*2=4</b>"))
+    self.assertEqual(next, s.index(" a"))
+
+  def testBoldOnlyThing(self):
+    # Serves for all marker-based formatters
+    s = u"*2*2=4*"
+    f = Boldfacer(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertEqual(u"".join(frags), u"<b>2*2=4</b>")
+    self.assertEqual(next, len(s))
+
+  def testBoldBetweenCRs(self):
+    # Serves for all marker-based formatters
+    s = u"abc\n*2*2=4*\ndef"
+    f = Boldfacer(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertTrue(u"".join(frags).startswith(u"abc\n<b>2*2=4</b>"))
+    self.assertEqual(next, s.index("\ndef"))
+
   def testItalic(self):
     s = u"abc _def_ ghi"
     f = Italicizer(s, 0)
@@ -77,15 +101,15 @@ class MarkerBasedTests(unittest.TestCase):
     s = u"abc-def-ghi"
     f = Striker(s, 0)
     frags, next = f.apply(s, 0)
-    self.assertTrue(u"".join(frags).startswith(u"abc-"))
-    self.assertEqual(next, s.index("d"))
+    self.assertEqual(frags, [])
+    self.assertEqual(next, 0)
 
   def testStrikeoutHyphenUnicode(self):
     s = u"нет-нет и да-да"
     f = Striker(s, 0)
     frags, next = f.apply(s, 0)
-    self.assertTrue(u"".join(frags).startswith(u"нет-"))
-    self.assertEqual(next, s.index(u"нет "))
+    self.assertEqual(frags, [])
+    self.assertEqual(next, 0)
 
   def testMarkedEscapeInside(self):
     s = ur"a *bc\*def* ghi"
@@ -93,6 +117,13 @@ class MarkerBasedTests(unittest.TestCase):
     frags, next = f.apply(s, 0)
     self.assertTrue(u"".join(frags).startswith(u"a <b>bc*def</b>"))
     self.assertEqual(next, s.index(" g"))
+
+  def testNonStart(self):
+    s = ur"ab*cd* ef"
+    f = Boldfacer(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertEqual(frags, [])
+    self.assertEqual(next, 0)
 
 
 class CombinatorTests(unittest.TestCase):
@@ -204,6 +235,20 @@ class LinkerTests(unittest.TestCase):
     s = ur'abc http://d.e.f'
     frags = combinator.applyQueue(s)
     self.assertEqual(u"".join(frags), u'abc <a href="http://d.e.f">http://d.e.f</a>')
+
+  def testOuterParens(self):
+    s = ur"abc (http://d.e.f) ghi"
+    f = Linker(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertEqual(u"".join(frags), u'abc (<a href="http://d.e.f">http://d.e.f</a>')
+    self.assertEqual(next, s.index(") ghi"))
+
+  def testInnerParens(self):
+    s = ur"abc http://wiki/Foo_(Bar) ghi"
+    f = Linker(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertEqual(u"".join(frags), u'abc <a href="http://wiki/Foo_(Bar)">http://wiki/Foo_(Bar)</a>')
+    self.assertEqual(next, s.index(" ghi"))
 
 
 class BreakerTests(unittest.TestCase):

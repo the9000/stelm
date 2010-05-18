@@ -48,8 +48,8 @@ class MarkerBased(object):
     "Start finding in string s at given pos"
     hit = self.START_RE.search(s, pos)
     if hit:
-      self.start = hit.start()
-      self.end = hit.end()
+      self.start = hit.start(1)
+      self.end = hit.end(1)
     else:
       self.start = self.end = None
 
@@ -100,11 +100,15 @@ class MarkerBased(object):
 
 
 
-def produce(base_class, marker, tag):
+def produce(base_class, marker, tag, start_with_nonword=True):
   open_tag, close_tag = "<%s>" % tag, "</%s>" % tag
 
-  # match only our opening mark
-  START_RE = re.compile(ur"(\%s(?=\S))" % marker, re.U)
+  if start_with_nonword:
+    # match nonword + our opening mark
+    START_RE = re.compile(ur"(?:\W|^)(\%s(?=\S))" % marker, re.U)
+  else:
+    # match just our opening mark
+    START_RE = re.compile(ur"(\%s(?=\S))" % marker, re.U)
 
   # match either escape or closing mark + end of word
   END_RE = re.compile(ur"((?:\\)|(?:(?<=\S)\%s(?=\W|$)))" % marker, re.U)

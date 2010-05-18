@@ -37,7 +37,7 @@ class _QuoteWrapper(MarkerBased):
     return []
 
 
-QuoteWrapper = produce(_QuoteWrapper, '"', "")
+QuoteWrapper = produce(_QuoteWrapper, '"', "", False)
 
 class Linker(object):
   """
@@ -74,6 +74,10 @@ class Linker(object):
       if pos != start:
         res_list.append(s[pos:start])
       url = s[self.start : self.end]
+      if url.endswith(")") and not "(" in url:
+        # last ")" is not a part of URL unless there's an "(" earlier in it
+        self.end -= 1
+        url = s[self.start : self.end]
       if self.has_text:
         after_end = self.end+1 # including the space
         # cut out the link text
