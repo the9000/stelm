@@ -261,8 +261,8 @@ class LinkerTests(unittest.TestCase):
     s = ur"abc http://d.e.f?ghi!|foo. ghi"
     f = Linker(s, 0)
     frags, next = f.apply(s, 0)
-    self.assertEqual(u"".join(frags), u'abc (<a href="http://d.e.f?ghi!">foo</a>')
-    self.assertEqual(next, s.index(". ghi"))
+    self.assertEqual(u"".join(frags), u'abc <a href="http://d.e.f?ghi!">foo.</a>')
+    self.assertEqual(next, s.index(" ghi"))
 
   def testInnerParens(self):
     s = ur"abc http://wiki/Foo_(Bar) ghi"
