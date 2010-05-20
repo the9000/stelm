@@ -26,6 +26,7 @@
 # ^^^ This is the "Simplified BSD License"
 
 import re
+from cgi import escape as html_escape
 
 from marker_based import MarkerBased, produce
 
@@ -52,8 +53,29 @@ class Linker(object):
   Current limitation: a literal vertical bar cannot be inserted into the URL. Use %7C instead.
   """
 
-  LINK_RE = re.compile("(http://\S+?)(\s|\||$)")
+  LINK_RE = re.compile("([a-zA-Z0-9]+://\S+?)(\s|\||$)")
   SPACE_RE = re.compile("\s")
+
+  PROTO_CLASS_MAP = { # TODO: move this to options
+    'http': 'http',
+    'https': 'https',
+    'ftp': 'ftp',
+    'mailto': 'mailto',
+    'xmpp': 'xmpp',
+    '*': 'unknown'
+  }
+
+  @classmethod
+  def configure(cls, data_dict):
+    # TODO: add better config validation; maybe use yaml
+    proto_classes = data_dict.get("protocol_classes", None)
+    if proto_classes:
+      good_types = (str, unicode, (type(None)))
+      for k, v in proto_classes.iteritems():
+        if not isinstance(v, good_types):
+          print "Bad value %r for key %r" % (r, k)
+          continue
+        cls.PROTO_CLASS_MAP[unicode(k)] = v
 
   def __init__(self, s, pos):
     hit = self.LINK_RE.search(s, pos)
@@ -103,9 +125,17 @@ class Linker(object):
       else:
         text_frags = [url]
         start = self.end
-      res_list.append('<a href="')
-      res_list.append(url)
-      res_list.append('">')
+      proto_pos = url.find("://")
+      if proto_pos > 0:
+        proto = self.PROTO_CLASS_MAP.get(url[:proto_pos], self.PROTO_CLASS_MAP.get("*", None))
+      else:
+        proto = None
+      if any(bad_char in url for bad_char in '<>"'): # being defensive
+        url = html_escape(url, True)  
+      res_list.extend(('<a href="', url, '"'))
+      if proto:
+        res_list.extend((' class="', proto, '"'))
+      res_list.append('>')
       res_list.extend(text_frags)
       res_list.append("</a>")
     else:
@@ -113,8 +143,6 @@ class Linker(object):
       start = pos
       res_list = []
     return (res_list, start)
-
-
 
 
 from combinator import applyQueue

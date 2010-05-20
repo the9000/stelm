@@ -34,7 +34,7 @@ from linebreaker import LineBreaker
 from dasher import Dasher
 import combinator
 
-class MarkerBasedTests(unittest.TestCase):
+class TMarkerBased(unittest.TestCase):
 
   def testBold(self):
     s = u"abc *def* ghi"
@@ -112,10 +112,10 @@ class MarkerBasedTests(unittest.TestCase):
     self.assertEqual(next, 0)
 
   def testMarkedEscapeInside(self):
-    s = ur"a *bc\*def* ghi"
+    s = ur"a *bc\* def* ghi"
     f = Boldfacer(s, 0)
     frags, next = f.apply(s, 0)
-    self.assertTrue(u"".join(frags).startswith(u"a <b>bc*def</b>"))
+    self.assertTrue(u"".join(frags).startswith(u"a <b>bc* def</b>"))
     self.assertEqual(next, s.index(" g"))
 
   def testNonStart(self):
@@ -126,7 +126,7 @@ class MarkerBasedTests(unittest.TestCase):
     self.assertEqual(next, 0)
 
 
-class CombinatorTests(unittest.TestCase):
+class TCombinator(unittest.TestCase):
 
   def testSimple(self):
     s = u"abc *def* _ghi_ -jkl- mno"
@@ -164,34 +164,43 @@ class CombinatorTests(unittest.TestCase):
     self.assertEqual(u"".join(frags), ur"<b>a\\*b</b>")
 
 
-class PreformatTests(unittest.TestCase):
+class TPreformatMulti(unittest.TestCase):
 
   def testOneLiner(self):
-    s = ur"abc %!%def ghi%!%jkl"
+    s = u"abc {{\ndef ghi\n}}jkl"
     f = PreFormatter(s, 0)
     frags, next = f.apply(s, 0)
-    self.assertTrue(u"".join(frags).startswith(u"abc <pre>def ghi</pre>"))
+    self.assertEqual(u"".join(frags), u"abc<pre>def ghi</pre>")
     self.assertEqual(next, s.index("jkl"))
 
   def testEscapeInside(self):
-    s = ur"abc %!% end with \%!% and you're done %!% aaa"
+    s = u"abc {{\n end with \}} and you're done \n}} aaa"
     f = PreFormatter(s, 0)
     frags, next = f.apply(s, 0)
-    self.assertTrue(u"".join(frags).startswith(u"abc <pre> end with \\%!% and you're done </pre>"))
-    self.assertEqual(next, s.index(" aaa"))
+    self.assertEqual(u"".join(frags), u"abc<pre> end with }} and you're done </pre>")
+    self.assertEqual(next, s.index("aaa"))
 
   def testContainingMarkup(self):
-    s = ur"code %!%*char*%!% done"
+    s = u"code {{\nint *char*\n}} done"
     frags = combinator.applyQueue(s)
-    self.assertEqual(u"".join(frags), ur"code <pre>*char*</pre> done")
+    self.assertEqual(u"".join(frags), ur"code<pre>int *char*</pre>done")
 
   def testPWrappedInMarkup(self):
-    s = ur"remember: *%!%i += 1%!%* and only so!"
+    s = u"remember: *{{\ni += 1\n}}* and only so!"
     frags = combinator.applyQueue(s)
     self.assertEqual(u"".join(frags), ur"remember: <b><pre>i += 1</pre></b> and only so!")
 
 
-class LinkerTests(unittest.TestCase):
+class TLinker(unittest.TestCase):
+
+  def setUp(self):
+    Linker.configure({
+      "protocol_classes": {
+        "http": None,
+        'ftp': 'ftp',
+        "*": "unknown"
+      }
+   })
 
   def testSimple(self):
     s = ur"abc http://d.e.f ghi"
@@ -271,8 +280,28 @@ class LinkerTests(unittest.TestCase):
     self.assertEqual(u"".join(frags), u'abc <a href="http://wiki/Foo_(Bar)">http://wiki/Foo_(Bar)</a>')
     self.assertEqual(next, s.index(" ghi"))
 
+  def testKnownProtocolClass(self):
+    s = ur"abc ftp://wiki/Foo ghi"
+    f = Linker(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertEqual(u"".join(frags), u'abc <a href="ftp://wiki/Foo" class="ftp">ftp://wiki/Foo</a>')
+    self.assertEqual(next, s.index(" ghi"))
 
-class BreakerTests(unittest.TestCase):
+  def testUnknownProtocolClass(self):
+    s = ur"abc zox://wiki/Foo ghi"
+    f = Linker(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertEqual(u"".join(frags), u'abc <a href="zox://wiki/Foo" class="unknown">zox://wiki/Foo</a>')
+    self.assertEqual(next, s.index(" ghi"))
+
+  def testBadCharsInUrl(self):
+    s = ur'abc http://d.e.f?<a>+"b"|foo ghi'
+    f = Linker(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertEqual(u"".join(frags), u'abc <a href="http://d.e.f?&lt;a&gt;+&quot;b&quot;">foo</a>')
+    self.assertEqual(next, s.index(" ghi"))
+
+class TBreaker(unittest.TestCase):
 
   def testN(self):
     s = u'a\nb'
@@ -303,7 +332,7 @@ class BreakerTests(unittest.TestCase):
     self.assertEqual(next, s.index("b"))
 
 
-class DasherTests(unittest.TestCase):
+class TDasher(unittest.TestCase):
 
   def testSimple(self):
     s = u'a -- b'

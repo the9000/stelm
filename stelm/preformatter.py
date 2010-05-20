@@ -31,7 +31,8 @@ class PreFormatter(object):
   """
   Makes text pre-formatted and non-interpreted, e.g. for easy quotation of source code.
   Any possible markup inside is rendered as is, without further formatting.
-  Starting and ending sequence is %!%. To quote in inside, use \%!%. Nothing else is interpreted.
+  Starting sequence is {{, ending is }}, each on its own line.
+  To quote in inside, use \}}. Nothing else is interpreted.
 
   Since this formatter prints what other formatters might interpret, it must come first in the queue.
   """
@@ -39,8 +40,11 @@ class PreFormatter(object):
   open_tag="<pre>"
   close_tag = "</pre>"
 
-  START = END = ur"%!%"
-  ESCAPED = u"\\" + END
+  END_SEQ = "}}"
+
+  START = ur"\n?\s*{{\s*\n"
+  END = ur"\n\s*" + END_SEQ + "\s*\n?"
+  ESCAPED = u"\\" + END_SEQ
 
   START_RE = re.compile(u"("+START+")")
   END_RE = re.compile(u"((?:\\"+ESCAPED+")|(?:"+END+"))") # either escaped or normal end
@@ -59,6 +63,7 @@ class PreFormatter(object):
   def apply(self, s, pos):
     if self.start is not None:
       res_list = []
+      innards = []
       start = self.start
       if pos != start:
         res_list.append(s[pos:start])
@@ -71,12 +76,15 @@ class PreFormatter(object):
           mark = hit.groups()[0]
           if mark == self.ESCAPED:
             # cut out and continue
-            left_limit = hit.end()+1
+            innards.append(s[self.end:hit.start()])
+            innards.append(self.END_SEQ)
+            self.end = left_limit = hit.end()
             look_for_closing = True
           else:
             # wrap in tag
             res_list.append(self.open_tag)
-            res_list.append(s[self.end:hit.start()]) # no recursive formatting
+            res_list.extend(innards)
+            res_list.append(s[self.end:hit.start()])
             res_list.append(self.close_tag)
             start = hit.end()
         else:
