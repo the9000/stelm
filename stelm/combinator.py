@@ -82,13 +82,13 @@ def applyQueue(s):
 
 
 from linebreaker import LineBreaker
-from preformatter import PreFormatter
+from preformatter import BlockCodeFormatter, InlineCodeFormatter
 from linker import Linker
-from dasher import Dasher
+from simple_substitutor import Dasher, HorizontalRuler
 from marker_based import Striker, Boldfacer, Italicizer
 from escaper import Escaper
 
 #from hashtagger import HashTagger
 
-QUEUE = (LineBreaker, PreFormatter, Linker, Dasher, Boldfacer, Italicizer, Striker, Escaper)
+QUEUE = (HorizontalRuler, LineBreaker, BlockCodeFormatter, InlineCodeFormatter, Linker, Dasher, Boldfacer, Italicizer, Striker, Escaper)
 

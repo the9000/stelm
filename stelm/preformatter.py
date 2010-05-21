@@ -27,7 +27,7 @@
 
 import re
 
-class PreFormatter(object):
+class _PreFormatter(object):
   """
   Makes text pre-formatted and non-interpreted, e.g. for easy quotation of source code.
   Any possible markup inside is rendered as is, without further formatting.
@@ -37,17 +37,12 @@ class PreFormatter(object):
   Since this formatter prints what other formatters might interpret, it must come first in the queue.
   """
 
-  open_tag="<pre>"
-  close_tag = "</pre>"
-
-  END_SEQ = "}}"
-
-  START = ur"\n?\s*{{\s*\n"
-  END = ur"\n\s*" + END_SEQ + "\s*\n?"
-  ESCAPED = u"\\" + END_SEQ
-
-  START_RE = re.compile(u"("+START+")")
-  END_RE = re.compile(u"((?:\\"+ESCAPED+")|(?:"+END+"))") # either escaped or normal end
+  @classmethod
+  def prepare(cls, **attrs):
+    "Patch the class with whatever we want"
+    for k,v in attrs.iteritems():
+      setattr(cls, k, v)
+    return cls
 
   def __init__(self, s, pos):
     hit = self.START_RE.search(s, pos)
@@ -97,3 +92,47 @@ class PreFormatter(object):
       res_list = []
     return (res_list, start)
 
+
+
+def _produceCodeBlockFromatter(start_seq, end_seq, tag_name):
+  open_tag, close_tag = "<%s>" % tag_name, "</%s>" % tag_name
+
+  START = ur"\n?\s*" + start_seq + "\s*\n"
+  END = ur"\n\s*" + end_seq + "\s*\n?"
+  ESCAPED = u"\\" + end_seq
+
+  START_RE = re.compile(u"("+START+")", re.U + re.MULTILINE)
+  END_RE = re.compile(u"((?:\\"+ESCAPED+")|(?:"+END+"))", re.U + re.MULTILINE) # either escaped or normal end
+
+  class CodeBlockWrapper(_PreFormatter):
+    def __str__(self):
+      return "%s(%r %r -> %r)%r" % (self.__class__.__name__, start_seq, end_seq, tag_name, id(self))
+
+  return CodeBlockWrapper.prepare(
+    START_RE = START_RE, END_RE=END_RE, ESCAPED=ESCAPED, END_SEQ=end_seq,
+    open_tag=open_tag, close_tag=close_tag
+  )
+
+def _produceInlineCodeFromatter(start_seq, end_seq, tag_name):
+  open_tag, close_tag = "<%s>" % tag_name, "</%s>" % tag_name
+
+  START = start_seq
+  END = end_seq
+  ESCAPED = u"\\" + end_seq
+
+  START_RE = re.compile(u"("+START+")")
+  END_RE = re.compile(u"((?:\\"+ESCAPED+")|(?:"+END+"))") # either escaped or normal end
+
+  class InlineBlockWrapper(_PreFormatter):
+    def __str__(self):
+      return "%s(%r %r -> %r)%r" % (self.__class__.__name__, start_seq, end_seq, tag_name, id(self))
+
+  return InlineBlockWrapper.prepare(
+    START_RE = START_RE, END_RE=END_RE, ESCAPED=ESCAPED, END_SEQ=end_seq,
+    open_tag=open_tag, close_tag=close_tag
+  )
+
+
+BlockCodeFormatter = _produceCodeBlockFromatter("{{", "}}", "pre")
+
+InlineCodeFormatter = _produceInlineCodeFromatter("{{", "}}", "code")

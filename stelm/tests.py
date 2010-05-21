@@ -28,10 +28,10 @@
 import unittest
 
 from marker_based import Boldfacer, Italicizer, Striker
-from preformatter import PreFormatter
+from preformatter import BlockCodeFormatter, InlineCodeFormatter
 from linker import Linker
 from linebreaker import LineBreaker
-from dasher import Dasher
+from simple_substitutor import Dasher, HorizontalRuler
 import combinator
 
 class TMarkerBased(unittest.TestCase):
@@ -164,18 +164,18 @@ class TCombinator(unittest.TestCase):
     self.assertEqual(u"".join(frags), ur"<b>a\\*b</b>")
 
 
-class TPreformatMulti(unittest.TestCase):
+class TBlockCode(unittest.TestCase):
 
   def testOneLiner(self):
     s = u"abc {{\ndef ghi\n}}jkl"
-    f = PreFormatter(s, 0)
+    f = BlockCodeFormatter(s, 0)
     frags, next = f.apply(s, 0)
     self.assertEqual(u"".join(frags), u"abc<pre>def ghi</pre>")
     self.assertEqual(next, s.index("jkl"))
 
   def testEscapeInside(self):
     s = u"abc {{\n end with \}} and you're done \n}} aaa"
-    f = PreFormatter(s, 0)
+    f = BlockCodeFormatter(s, 0)
     frags, next = f.apply(s, 0)
     self.assertEqual(u"".join(frags), u"abc<pre> end with }} and you're done </pre>")
     self.assertEqual(next, s.index("aaa"))
@@ -189,6 +189,32 @@ class TPreformatMulti(unittest.TestCase):
     s = u"remember: *{{\ni += 1\n}}* and only so!"
     frags = combinator.applyQueue(s)
     self.assertEqual(u"".join(frags), ur"remember: <b><pre>i += 1</pre></b> and only so!")
+
+class TInlineCode(unittest.TestCase):
+
+  def testOneLiner(self):
+    s = u"abc {{def ghi}} jkl"
+    f = InlineCodeFormatter(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertEqual(u"".join(frags), u"abc <code>def ghi</code>")
+    self.assertEqual(next, s.index(" jkl"))
+
+  def testEscapeInside(self):
+    s = u"abc {{ end with \}} and you're done }} aaa"
+    f = InlineCodeFormatter(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertEqual(u"".join(frags), u"abc <code> end with }} and you're done </code>")
+    self.assertEqual(next, s.index(" aaa"))
+
+  def testContainingMarkup(self):
+    s = u"code {{int *char*}} done"
+    frags = combinator.applyQueue(s)
+    self.assertEqual(u"".join(frags), ur"code <code>int *char*</code> done")
+
+  def testPWrappedInMarkup(self):
+    s = u"remember: *{{i += 1}}* and only so!"
+    frags = combinator.applyQueue(s)
+    self.assertEqual(u"".join(frags), ur"remember: <b><code>i += 1</code></b> and only so!")
 
 
 class TLinker(unittest.TestCase):
@@ -350,10 +376,41 @@ class TDasher(unittest.TestCase):
 
   def testBOL_Soft(self):
     s = u'Whatnot\n-- b'
-    f = Dasher(s, 0)
+    f = combinator.Dasher(s, 0)
     frags, next = f.apply(s, 0)
     self.assertTrue(u"".join(frags).startswith(u'Whatnot\n\u2014'))
     self.assertEqual(next, s.index(" b"))
+
+
+class THLiner(unittest.TestCase):
+
+  def testBetweenNewLines(self):
+    s = u'a\n----\nb'
+    f = HorizontalRuler(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertEqual(u"".join(frags), u'a<hr/>')
+    self.assertEqual(next, s.index("b"))
+
+  def testBetweenManyLines(self):
+    s = u'a\n\n----\n\nb'
+    f = HorizontalRuler(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertEqual(u"".join(frags), u'a\n<hr/>')
+    self.assertEqual(next, s.index("\nb"))
+
+  def testBOL(self):
+    s = u'---\n b'
+    f = HorizontalRuler(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertEqual(u"".join(frags), u'<hr/>')
+    self.assertEqual(next, s.index(" b"))
+
+  def testEOL(self):
+    s = u'Over!\n---'
+    f = HorizontalRuler(s, 0)
+    frags, next = f.apply(s, 0)
+    self.assertEqual(u"".join(frags), u'Over!<hr/>')
+    self.assertEqual(next, len(s))
 
 if __name__ == "__main__":
   unittest.main()

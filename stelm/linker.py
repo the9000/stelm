@@ -28,9 +28,9 @@
 import re
 from cgi import escape as html_escape
 
-from marker_based import MarkerBased, produce
+from marker_based import _MarkerBased, produce
 
-class _QuoteWrapper(MarkerBased):
+class _QuoteWrapper(_MarkerBased):
   def getOpening(self):
     return []
   #

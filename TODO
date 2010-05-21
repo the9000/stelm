@@ -1,10 +1,15 @@
 * Add length limiter to format() that keeps all tags closed, etc.
 
-* Add user settings to formatters.
+* Formatters configuration API.
 
-* Add #hashtags formatter.
+* Add #hashtags formatter (nearly done, needs configuration API).
 * Add markdown-like list formatter.
-* Switch code formatter to double backticks, add one-liners.
 
 * Use class inheritance to remove code redundancy.
 * Make apply() parameterless.
+
+=== Done ===
+* Switch code formatter to double curly braces.
+* Add one-line "code" formatter.
+* Added a horizontal rule formatter 
+

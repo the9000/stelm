@@ -36,7 +36,7 @@ import re
 __all__ = ["MarkerBased", "Boldfacer", "Italicizer", "Striker", "produce"]
 
 
-class MarkerBased(object):
+class _MarkerBased(object):
 
   @classmethod
   def prepare(cls, **attrs):
@@ -123,9 +123,9 @@ def produce(base_class, marker, tag, start_with_nonword=True):
   return MarkerWrapper
 
 
-Boldfacer = produce(MarkerBased, "*", "b")
-Italicizer = produce(MarkerBased, "_", "i")
-Striker = produce(MarkerBased, "-", "s")
+Boldfacer = produce(_MarkerBased, "*", "b")
+Italicizer = produce(_MarkerBased, "_", "i")
+Striker = produce(_MarkerBased, "-", "s")
 
 from combinator import applyQueue # not earlier, else circular definition error happens
 
