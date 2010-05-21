@@ -70,3 +70,5 @@ Dasher = _produce("(?:\s|^)(--)(?:\s)", u"\u2014")
 NEWLINE = "\r\n|\n\r|\n|\r"
 SPC = "[ \t]*"
 HorizontalRuler = _produce("((?:"+NEWLINE+"|^)"+SPC+"-{3,}"+SPC+"(?:"+NEWLINE+"|$))", "<hr/>")
+
+LineBreaker = _produce(ur"((?:\n\r)|(?:\r\n)|\n|\r)", "<br/>")

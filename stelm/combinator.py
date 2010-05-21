@@ -81,10 +81,9 @@ def applyQueue(s):
   return ret
 
 
-from linebreaker import LineBreaker
 from preformatter import BlockCodeFormatter, InlineCodeFormatter
 from linker import Linker
-from simple_substitutor import Dasher, HorizontalRuler
+from simple_substitutor import Dasher, HorizontalRuler, LineBreaker
 from marker_based import Striker, Boldfacer, Italicizer
 from escaper import Escaper
 

@@ -30,8 +30,7 @@ import unittest
 from marker_based import Boldfacer, Italicizer, Striker
 from preformatter import BlockCodeFormatter, InlineCodeFormatter
 from linker import Linker
-from linebreaker import LineBreaker
-from simple_substitutor import Dasher, HorizontalRuler
+from simple_substitutor import Dasher, HorizontalRuler, LineBreaker
 import combinator
 
 class TMarkerBased(unittest.TestCase):
