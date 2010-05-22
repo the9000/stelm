@@ -38,7 +38,7 @@ class TMarkerBased(unittest.TestCase):
   def testBold(self):
     s = u"abc *def* ghi"
     f = Boldfacer(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertTrue(u"".join(frags).startswith(u"abc <b>def</b>"))
     self.assertEqual(next, s.index(" g"))
 
@@ -46,7 +46,7 @@ class TMarkerBased(unittest.TestCase):
     # Serves for all marker-based formatters
     s = u"abc *2*2=4*. yeah"
     f = Boldfacer(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertTrue(u"".join(frags).startswith(u"abc <b>2*2=4</b>"))
     self.assertEqual(next, s.index("."))
 
@@ -54,7 +54,7 @@ class TMarkerBased(unittest.TestCase):
     # Serves for all marker-based formatters
     s = u"abc *2*2=4*"
     f = Boldfacer(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertTrue(u"".join(frags).startswith(u"abc <b>2*2=4</b>"))
     self.assertEqual(next, len(s))
 
@@ -62,7 +62,7 @@ class TMarkerBased(unittest.TestCase):
     # Serves for all marker-based formatters
     s = u"*2*2=4* abc"
     f = Boldfacer(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertTrue(u"".join(frags).startswith(u"<b>2*2=4</b>"))
     self.assertEqual(next, s.index(" a"))
 
@@ -70,7 +70,7 @@ class TMarkerBased(unittest.TestCase):
     # Serves for all marker-based formatters
     s = u"*2*2=4*"
     f = Boldfacer(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertEqual(u"".join(frags), u"<b>2*2=4</b>")
     self.assertEqual(next, len(s))
 
@@ -78,49 +78,49 @@ class TMarkerBased(unittest.TestCase):
     # Serves for all marker-based formatters
     s = u"abc\n*2*2=4*\ndef"
     f = Boldfacer(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertTrue(u"".join(frags).startswith(u"abc\n<b>2*2=4</b>"))
     self.assertEqual(next, s.index("\ndef"))
 
   def testItalic(self):
     s = u"abc _def_ ghi"
     f = Italicizer(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertTrue(u"".join(frags).startswith(u"abc <i>def</i>"))
     self.assertEqual(next, s.index(" g"))
 
   def testStrikeout(self):
     s = u"abc -def- ghi"
     f = Striker(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertTrue(u"".join(frags).startswith(u"abc <s>def</s>"))
     self.assertEqual(next, s.index(" g"))
 
   def testStrikeoutHyphen(self):
     s = u"abc-def-ghi"
     f = Striker(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertEqual(frags, [])
     self.assertEqual(next, 0)
 
   def testStrikeoutHyphenUnicode(self):
     s = u"нет-нет и да-да"
     f = Striker(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertEqual(frags, [])
     self.assertEqual(next, 0)
 
   def testMarkedEscapeInside(self):
     s = ur"a *bc\* def* ghi"
     f = Boldfacer(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertTrue(u"".join(frags).startswith(u"a <b>bc* def</b>"))
     self.assertEqual(next, s.index(" g"))
 
   def testNonStart(self):
     s = ur"ab*cd* ef"
     f = Boldfacer(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertEqual(frags, [])
     self.assertEqual(next, 0)
 
@@ -168,14 +168,14 @@ class TBlockCode(unittest.TestCase):
   def testOneLiner(self):
     s = u"abc {{\ndef ghi\n}}jkl"
     f = BlockCodeFormatter(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertEqual(u"".join(frags), u"abc<pre>def ghi</pre>")
     self.assertEqual(next, s.index("jkl"))
 
   def testEscapeInside(self):
     s = u"abc {{\n end with \}} and you're done \n}} aaa"
     f = BlockCodeFormatter(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertEqual(u"".join(frags), u"abc<pre> end with }} and you're done </pre>")
     self.assertEqual(next, s.index("aaa"))
 
@@ -194,14 +194,14 @@ class TInlineCode(unittest.TestCase):
   def testOneLiner(self):
     s = u"abc {{def ghi}} jkl"
     f = InlineCodeFormatter(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertEqual(u"".join(frags), u"abc <code>def ghi</code>")
     self.assertEqual(next, s.index(" jkl"))
 
   def testEscapeInside(self):
     s = u"abc {{ end with \}} and you're done }} aaa"
     f = InlineCodeFormatter(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertEqual(u"".join(frags), u"abc <code> end with }} and you're done </code>")
     self.assertEqual(next, s.index(" aaa"))
 
@@ -230,28 +230,28 @@ class TLinker(unittest.TestCase):
   def testSimple(self):
     s = ur"abc http://d.e.f ghi"
     f = Linker(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertTrue(u"".join(frags).startswith(u'abc <a href="http://d.e.f">http://d.e.f</a>'))
     self.assertEqual(next, s.index(" ghi"))
 
   def testNamed(self):
     s = ur"abc http://d.e.f|DEF ghi"
     f = Linker(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertTrue(u"".join(frags).startswith(u'abc <a href="http://d.e.f">DEF</a>'))
     self.assertEqual(next, s.index(" ghi"))
 
   def testNamedSpaced(self):
     s = ur'abc http://d.e.f|"D EF" ghi'
     f = Linker(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertTrue(u"".join(frags).startswith(u'abc <a href="http://d.e.f">D EF</a>'))
     self.assertEqual(next, s.index(" ghi"))
 
   def testNamedEscaped(self):
     s = ur'abc http://d.e.f|"D\"E\"F" ghi'
     f = Linker(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertTrue(u"".join(frags).startswith(u'abc <a href="http://d.e.f">D"E"F</a>'))
     self.assertEqual(next, s.index(" ghi"))
 
@@ -273,56 +273,56 @@ class TLinker(unittest.TestCase):
   def testOuterParens(self):
     s = ur"abc (http://d.e.f) ghi"
     f = Linker(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertEqual(u"".join(frags), u'abc (<a href="http://d.e.f">http://d.e.f</a>')
     self.assertEqual(next, s.index(") ghi"))
 
   def testComma(self):
     s = ur"abc http://d.e.f, ghi"
     f = Linker(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertEqual(u"".join(frags), u'abc <a href="http://d.e.f">http://d.e.f</a>')
     self.assertEqual(next, s.index(", ghi"))
 
   def testOuterParensAndDot(self):
     s = ur"abc (http://d.e.f). ghi"
     f = Linker(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertEqual(u"".join(frags), u'abc (<a href="http://d.e.f">http://d.e.f</a>')
     self.assertEqual(next, s.index("). ghi"))
 
   def testPunctuationAndName(self):
     s = ur"abc http://d.e.f?ghi!|foo. ghi"
     f = Linker(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertEqual(u"".join(frags), u'abc <a href="http://d.e.f?ghi!">foo.</a>')
     self.assertEqual(next, s.index(" ghi"))
 
   def testInnerParens(self):
     s = ur"abc http://wiki/Foo_(Bar) ghi"
     f = Linker(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertEqual(u"".join(frags), u'abc <a href="http://wiki/Foo_(Bar)">http://wiki/Foo_(Bar)</a>')
     self.assertEqual(next, s.index(" ghi"))
 
   def testKnownProtocolClass(self):
     s = ur"abc ftp://wiki/Foo ghi"
     f = Linker(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertEqual(u"".join(frags), u'abc <a href="ftp://wiki/Foo" class="ftp">ftp://wiki/Foo</a>')
     self.assertEqual(next, s.index(" ghi"))
 
   def testUnknownProtocolClass(self):
     s = ur"abc zox://wiki/Foo ghi"
     f = Linker(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertEqual(u"".join(frags), u'abc <a href="zox://wiki/Foo" class="unknown">zox://wiki/Foo</a>')
     self.assertEqual(next, s.index(" ghi"))
 
   def testBadCharsInUrl(self):
     s = ur'abc http://d.e.f?<a>+"b"|foo ghi'
     f = Linker(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertEqual(u"".join(frags), u'abc <a href="http://d.e.f?&lt;a&gt;+&quot;b&quot;">foo</a>')
     self.assertEqual(next, s.index(" ghi"))
 
@@ -331,28 +331,28 @@ class TBreaker(unittest.TestCase):
   def testN(self):
     s = u'a\nb'
     f = LineBreaker(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertTrue(u"".join(frags).startswith(u'a<br/>'))
     self.assertEqual(next, s.index("b"))
 
   def testR(self):
     s = u'a\rb'
     f = LineBreaker(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertTrue(u"".join(frags).startswith(u'a<br/>'))
     self.assertEqual(next, s.index("b"))
 
   def testNR(self):
     s = u'a\n\rb'
     f = LineBreaker(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertTrue(u"".join(frags).startswith(u'a<br/>'))
     self.assertEqual(next, s.index("b"))
 
   def testRN(self):
     s = u'a\r\nb'
     f = LineBreaker(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertTrue(u"".join(frags).startswith(u'a<br/>'))
     self.assertEqual(next, s.index("b"))
 
@@ -362,21 +362,21 @@ class TDasher(unittest.TestCase):
   def testSimple(self):
     s = u'a -- b'
     f = Dasher(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertTrue(u"".join(frags).startswith(u'a \u2014'))
     self.assertEqual(next, s.index(" b"))
 
   def testBOL_Hard(self):
     s = u'-- b'
     f = Dasher(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertTrue(u"".join(frags).startswith(u'\u2014'))
     self.assertEqual(next, s.index(" b"))
 
   def testBOL_Soft(self):
     s = u'Whatnot\n-- b'
     f = combinator.Dasher(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertTrue(u"".join(frags).startswith(u'Whatnot\n\u2014'))
     self.assertEqual(next, s.index(" b"))
 
@@ -386,28 +386,28 @@ class THLiner(unittest.TestCase):
   def testBetweenNewLines(self):
     s = u'a\n----\nb'
     f = HorizontalRuler(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertEqual(u"".join(frags), u'a<hr/>')
     self.assertEqual(next, s.index("b"))
 
   def testBetweenManyLines(self):
     s = u'a\n\n----\n\nb'
     f = HorizontalRuler(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertEqual(u"".join(frags), u'a\n<hr/>')
     self.assertEqual(next, s.index("\nb"))
 
   def testBOL(self):
     s = u'---\n b'
     f = HorizontalRuler(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertEqual(u"".join(frags), u'<hr/>')
     self.assertEqual(next, s.index(" b"))
 
   def testEOL(self):
     s = u'Over!\n---'
     f = HorizontalRuler(s, 0)
-    frags, next = f.apply(s, 0)
+    frags, next = f.apply()
     self.assertEqual(u"".join(frags), u'Over!<hr/>')
     self.assertEqual(next, len(s))
 

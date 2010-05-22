@@ -74,7 +74,7 @@ def applyQueue(s):
     if candidate is None:
       break
     else:
-      frags, pos = candidate.apply(s, pos)
+      frags, pos = candidate.apply()
       ret.extend(frags)
   if pos < maxlen:
     ret.append(s[pos:])

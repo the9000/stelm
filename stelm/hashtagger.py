@@ -45,18 +45,21 @@ class HashTagger(object):
   TAG_URL = u"/tag/"
 
   def __init__(self, s, pos):
+    self.source = s
+    self.boundary = pos
     hit = self.TAG_RE.search(s, pos)
     self.hit = hit
 
   def getStart(self):
     return self.hit and self.hit.start() or None
 
-  def apply(self, s, pos):
+  def apply(self):
+    source, boundary = self.source, self.boundary
     if self.hit is not None:
       res_list = []
       start = self.hit.start()
-      if pos != start:
-        res_list.append(s[pos:start])
+      if boundary != start:
+        res_list.append(source[boundary:start])
       text = self.hit.groups()[0]
       if text.endswith("_"):
         text = text[:-1]
@@ -71,7 +74,7 @@ class HashTagger(object):
       res_list.append("</a>")
     else:
       # no start
-      next = pos
+      next = boundary
       res_list = []
     return (res_list, next)
 

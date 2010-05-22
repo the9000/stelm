@@ -45,6 +45,8 @@ class _PreFormatter(object):
     return cls
 
   def __init__(self, s, pos):
+    self.source = s
+    self.boundary = pos
     hit = self.START_RE.search(s, pos)
     if hit is None:
       self.start = self.end = None
@@ -55,23 +57,24 @@ class _PreFormatter(object):
   def getStart(self):
     return self.start
 
-  def apply(self, s, pos):
+  def apply(self):
+    source, boundary = self.source, self.boundary
     if self.start is not None:
       res_list = []
       innards = []
       start = self.start
-      if pos != start:
-        res_list.append(s[pos:start])
+      if boundary != start:
+        res_list.append(source[boundary:start])
       left_limit = self.end
       look_for_closing = True
       while look_for_closing:
         look_for_closing = False # usually we need only 1 iteration
-        hit = self.END_RE.search(s, left_limit)
+        hit = self.END_RE.search(source, left_limit)
         if hit:
           mark = hit.groups()[0]
           if mark == self.ESCAPED:
             # cut out and continue
-            innards.append(s[self.end:hit.start()])
+            innards.append(source[self.end:hit.start()])
             innards.append(self.END_SEQ)
             self.end = left_limit = hit.end()
             look_for_closing = True
@@ -79,16 +82,16 @@ class _PreFormatter(object):
             # wrap in tag
             res_list.append(self.open_tag)
             res_list.extend(innards)
-            res_list.append(s[self.end:hit.start()])
+            res_list.append(source[self.end:hit.start()])
             res_list.append(self.close_tag)
             start = hit.end()
         else:
           # start but no end
-          res_list.append(s[self.start:self.end]) # the unmatched marker
+          res_list.append(source[self.start:self.end]) # the unmatched marker
           start = self.end
     else:
       # no start
-      start = pos
+      start = boundary
       res_list = []
     return (res_list, start)
 

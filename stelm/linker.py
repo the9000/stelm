@@ -78,6 +78,8 @@ class Linker(object):
         cls.PROTO_CLASS_MAP[unicode(k)] = v
 
   def __init__(self, s, pos):
+    self.source = s
+    self.boundary = pos
     hit = self.LINK_RE.search(s, pos)
     if hit is None:
       self.start = self.end = None
@@ -89,13 +91,14 @@ class Linker(object):
   def getStart(self):
     return self.start
 
-  def apply(self, s, pos):
+  def apply(self):
+    source, boundary, end = self.source, self.boundary, self.end
     if self.start is not None:
       res_list = []
       start = self.start
-      if pos != start:
-        res_list.append(s[pos:start])
-      url = s[self.start : self.end]
+      if boundary != start:
+        res_list.append(source[boundary : start])
+      url = source[start : end]
       if not self.has_text:
         # strip pieces that may not belong to URL
         while True:
@@ -103,28 +106,27 @@ class Linker(object):
           if last_of_url == ")" and "(" not in url or last_of_url in ".,;:?!\"'":
             # last ")" is not a part of URL unless there's an "(" earlier in it;
             # common punctuation is usually not a part of URL
-            self.end -= 1
-            url = s[self.start : self.end]
+            end -= 1
+            url = source[start : end]
           else:
             break
       if self.has_text:
-        after_end = self.end+1 # including the space
+        after_end = end + 1 # including the space
         # cut out the link text
-        maybe_quote = s[after_end : after_end+1]
+        maybe_quote = source[after_end : after_end+1]
         if maybe_quote == '"':
-          quoter = QuoteWrapper(s, after_end)
-          text_frags, start = quoter.apply(s, after_end)
+          text_frags, start = QuoteWrapper(source, after_end).apply()
         else:
           # skip to next space
-          hit = self.SPACE_RE.search(s, after_end+1)
+          hit = self.SPACE_RE.search(source, after_end+1)
           if hit:
             start = hit.start()
           else:
-            start = len(s) # had no space till EOL
-          text_frags = applyQueue(s[after_end : start])
+            start = len(source) # had no space till EOL
+          text_frags = applyQueue(source[after_end : start])
       else:
         text_frags = [url]
-        start = self.end
+        start = end
       proto_pos = url.find("://")
       if proto_pos > 0:
         proto = self.PROTO_CLASS_MAP.get(url[:proto_pos], self.PROTO_CLASS_MAP.get("*", None))
@@ -140,7 +142,7 @@ class Linker(object):
       res_list.append("</a>")
     else:
       # no start
-      start = pos
+      start = boundary
       res_list = []
     return (res_list, start)
 

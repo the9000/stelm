@@ -46,6 +46,8 @@ class _MarkerBased(object):
 
   def __init__(self, s, pos):
     "Start finding in string s at given pos"
+    self.source = s
+    self.boundary = pos
     hit = self.START_RE.search(s, pos)
     if hit:
       self.start = hit.start(1)
@@ -57,18 +59,19 @@ class _MarkerBased(object):
     "Returns possible start of formatting position, or None if impossible"
     return self.start
 
-  def apply(self, s, pos):
+  def apply(self):
     "Apply formatter; returns a tuple (list of fragments, next position)."
+    source, boundary = self.source, self.boundary
     start = self.start
     if start is not None:
       res_list = []
-      if pos != start:
-        res_list.append(s[pos:start])
+      if boundary != start:
+        res_list.append(source[boundary:start])
       left_limit = self.end
       look_for_closing = True
       while look_for_closing:
         look_for_closing = False # usually we need only 1 iteration
-        hit = self.END_RE.search(s, left_limit)
+        hit = self.END_RE.search(source, left_limit)
         if hit and hit.start() != self.end:
           mark = hit.groups()[0]
           if mark == u'\\':
@@ -79,16 +82,16 @@ class _MarkerBased(object):
             # wrap in tag
             res_list.extend(self.getOpening())
             # recursively format the inside of match
-            res_list.extend(applyQueue(s[self.end:hit.start()]))
+            res_list.extend(applyQueue(source[self.end:hit.start()]))
             res_list.extend(self.getClosing())
             start = hit.end()
         else:
           # start but no end
-          res_list.append(s[self.start:self.end]) # the unmatched marker
+          res_list.append(source[self.start:self.end]) # the unmatched marker
           start = self.end
     else:
       # no start
-      start = pos
+      start = boundary
       res_list = []
     return (res_list, start)
 

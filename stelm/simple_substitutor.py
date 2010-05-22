@@ -38,6 +38,8 @@ def _produce(pattern, replacement):
     """
 
     def __init__(self, s, pos):
+      self.source = s
+      self.boundary = pos
       hit = PATTERN_RE.search(s, pos)
       if hit is None:
         self.start = self.end = None
@@ -48,17 +50,18 @@ def _produce(pattern, replacement):
     def getStart(self):
       return self.start
 
-    def apply(self, s, pos):
-      if self.start is not None:
+    def apply(self):
+      start, boundary, source = self.start, self.boundary, self.source
+      if start is not None:
         res_list = []
         start = self.start
-        if pos != start:
-          res_list.append(s[pos:start])
+        if boundary != start:
+          res_list.append(source[boundary:start])
         res_list.append(replacement)
         start = self.end
       else:
         # no start
-        start = pos
+        start = boundary
         res_list = []
       return (res_list, start)
 

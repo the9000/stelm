@@ -36,6 +36,8 @@ class Escaper(object):
   """
   def __init__(self, s, pos):
     "Start finding in string s at given pos"
+    self.source = s
+    self.boundary = pos
     hit = ESC_RE.search(s, pos)
     if hit:
       self.start = hit.start()
@@ -46,6 +48,7 @@ class Escaper(object):
     "Returns possible start of formatting position, or None if impossible"
     return self.start
 
-  def apply(self, s, pos):
+  def apply(self):
     "Apply formatter; returns a tuple (list of fragments, next position)."
-    return ([s[pos:self.start], s[self.start+1]], self.start+2)
+    source, boundary, start = self.source, self.boundary, self.start
+    return ([source[boundary:start], source[start+1]], start+2)
