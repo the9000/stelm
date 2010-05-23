@@ -82,6 +82,14 @@ class TMarkerBased(unittest.TestCase):
     self.assertTrue(u"".join(frags).startswith(u"abc\n<b>2*2=4</b>"))
     self.assertEqual(next, s.index("\ndef"))
 
+  def testBoldBackslash(self):
+    # Serves for all marker-based formatters
+    s = ur"a *\\* b"
+    f = Boldfacer(s, 0)
+    frags, next = f.apply()
+    self.assertEqual(u"".join(frags), ur"a <b>\</b>") # double backslash formatted recursively
+    self.assertEqual(next, s.index(" b"))
+
   def testItalic(self):
     s = u"abc _def_ ghi"
     f = Italicizer(s, 0)
@@ -114,7 +122,7 @@ class TMarkerBased(unittest.TestCase):
     s = ur"a *bc\* def* ghi"
     f = Boldfacer(s, 0)
     frags, next = f.apply()
-    self.assertTrue(u"".join(frags).startswith(u"a <b>bc* def</b>"))
+    self.assertEqual(u"".join(frags), u"a <b>bc* def</b>")
     self.assertEqual(next, s.index(" g"))
 
   def testNonStart(self):

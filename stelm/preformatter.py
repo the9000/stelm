@@ -109,14 +109,14 @@ def _produceCodeBlockFromatter(start_seq, end_seq, tag_name):
 
   class CodeBlockWrapper(_PreFormatter):
     def __str__(self):
-      return "%s(%r %r -> %r)%r" % (self.__class__.__name__, start_seq, end_seq, tag_name, id(self))
+      return "%s(%r %r -> %r)%x" % (self.__class__.__name__, start_seq, end_seq, tag_name, id(self))
 
   return CodeBlockWrapper.prepare(
     START_RE = START_RE, END_RE=END_RE, ESCAPED=ESCAPED, END_SEQ=end_seq,
     open_tag=open_tag, close_tag=close_tag
   )
 
-def _produceInlineCodeFromatter(start_seq, end_seq, tag_name):
+def _produceInlineCodeFormatter(start_seq, end_seq, tag_name):
   open_tag, close_tag = "<%s>" % tag_name, "</%s>" % tag_name
 
   START = start_seq
@@ -138,4 +138,4 @@ def _produceInlineCodeFromatter(start_seq, end_seq, tag_name):
 
 BlockCodeFormatter = _produceCodeBlockFromatter("{{", "}}", "pre")
 
-InlineCodeFormatter = _produceInlineCodeFromatter("{{", "}}", "code")
+InlineCodeFormatter = _produceInlineCodeFormatter("{{", "}}", "code")

@@ -73,18 +73,32 @@ class _MarkerBased(object):
         look_for_closing = False # usually we need only 1 iteration
         hit = self.END_RE.search(source, left_limit)
         if hit and hit.start() != self.end:
-          mark = hit.groups()[0]
-          if mark == u'\\':
-            # escape; ignore and continue
-            left_limit = hit.end()+1
+          is_escape = False
+          escape_mark = hit.group(1)
+          if escape_mark:
+            i = j = hit.start(1)
+            while i >= 0 and source[i] == "\\":
+              i -= 1
+            is_escape = (j - i) % 2 == 1 # odd number of \'s ends in a real escape
+            print is_escape 
+          if is_escape:
+            # ignore and repeat
+            left_limit = hit.end(1) + 1
             look_for_closing = True
+            continue
           else:
+            if escape_mark:
+              # ...but not our ending sequence not escaped
+              hit_index = 1
+            else:
+              # just an end marker matched
+              hit_index = 2
             # wrap in tag
             res_list.extend(self.getOpening())
             # recursively format the inside of match
-            res_list.extend(applyQueue(source[self.end:hit.start()]))
+            res_list.extend(applyQueue(source[self.end:hit.start(hit_index)]))
             res_list.extend(self.getClosing())
-            start = hit.end()
+            start = hit.end(hit_index)
         else:
           # start but no end
           res_list.append(source[self.start:self.end]) # the unmatched marker
@@ -111,14 +125,18 @@ def produce(base_class, marker, tag, start_with_nonword=True):
     START_RE = re.compile(ur"(?:\W|^)(\%s(?=\S))" % marker, re.U)
   else:
     # match just our opening mark
-    START_RE = re.compile(ur"(\%s(?=\S))" % marker, re.U)
+    START_RE = re.compile(ur"("+marker+"(?=\S))", re.U)
 
   # match either escape or closing mark + end of word
-  END_RE = re.compile(ur"((?:\\)|(?:(?<=\S)\%s(?=\W|$)))" % marker, re.U)
+  #END_RE = re.compile(ur"((?:\\)|(?:(?<=\S)"+marker+"(?=\W|$)))", re.U)
+
+  # match either escape + closing mark or closing mark + end of word;
+  # $1 only matches escapes, $2 only matches non-escaped end markers 
+  END_RE = re.compile(r"(?:(\\\%(M)s))|((?<=\S)\%(M)s(?=\W|$))" % dict(M=marker), re.U)
 
   class MarkerWrapper(base_class):
     def __str__(self):
-      return "%r(%s->%s)@%r" % (self.__class__, marker, tag, id(self))
+      return "%r(%s->%s)@%x" % (self.__class__, marker, tag, id(self))
 
 
   MarkerWrapper.prepare(START_RE=START_RE, END_RE=END_RE, open_tag=open_tag, close_tag=close_tag)
